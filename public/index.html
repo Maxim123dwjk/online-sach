@@ -4,43 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Online Šach</title>
-    <!-- CSS pre hraciu plochu -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" integrity="sha256-4YI2ZwR85X4S4Dw+H5rIqZ1qC3X5M7A4N1S5J6vV94=" crossorigin="anonymous">
+    <!-- CSS štýly pre šachovnicu -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
     <style>
         body { 
             font-family: Arial, sans-serif; 
             text-align: center; 
             background: #1e1e1e; 
             color: white; 
-            margin-top: 20px; 
+            margin: 0;
+            padding: 15px;
         }
         h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-        #board { 
-            width: 600px; /* Zväčšená šachovnica */
-            max-width: 95vw; 
-            margin: 20px auto; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            font-size: 2em;
+            margin-bottom: 5px;
         }
         #status { 
-            font-size: 1.5em; /* Zväčšený text stavu */
-            margin: 15px; 
+            font-size: 1.3em; 
+            margin: 10px 0; 
             font-weight: bold; 
             color: #00d2d3;
+            min-height: 30px;
+        }
+        #board { 
+            width: 90vw;
+            max-width: 550px; 
+            margin: 10px auto; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
         button { 
-            padding: 12px 25px; 
-            font-size: 1.2em; /* Zväčšené tlačidlo */
+            padding: 12px 20px; 
+            font-size: 1em; 
             cursor: pointer; 
             background: #28a745; 
             color: white; 
             border: none; 
             border-radius: 8px; 
-            margin-top: 10px;
+            margin-top: 15px;
             font-weight: bold;
-            transition: background 0.2s;
         }
         button:hover { 
             background: #218838; 
@@ -54,9 +55,9 @@
     <div id="board"></div>
     <button onclick="copyInviteLink()">Vytvoriť pozvánku pre kamaráta</button>
 
-    <!-- Knižnice: JQuery, Chessboard.js, Chess.js, Socket.io -->
+    <!-- Knižnice načítané v správnom poradí -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js" integrity="sha256-eT3K0T9J2C4G8H1H/w24A5f2E1I3J4Y0J7N6V34=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
 
@@ -162,7 +163,7 @@
             el.select();
             document.execCommand('copy');
             document.body.removeChild(el);
-            alert('Odkaz na hru bol skopírovaný! Pošli ho kamarátovi.');
+            alert('Odkaz bol skopírovaný!');
         }
     </script>
 </body>
