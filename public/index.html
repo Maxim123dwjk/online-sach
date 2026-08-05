@@ -2,24 +2,61 @@
 <html lang="sk">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Online Šach</title>
-    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <!-- CSS pre hraciu plochu -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" integrity="sha256-4YI2ZwR85X4S4Dw+H5rIqZ1qC3X5M7A4N1S5J6vV94=" crossorigin="anonymous">
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background: #222; color: white; }
-        #board { width: 400px; margin: 20px auto; }
-        #status { font-size: 1.2em; margin: 10px; }
-        button { padding: 10px 20px; font-size: 1em; cursor: pointer; }
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            background: #1e1e1e; 
+            color: white; 
+            margin-top: 20px; 
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        #board { 
+            width: 600px; /* Zväčšená šachovnica */
+            max-width: 95vw; 
+            margin: 20px auto; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        #status { 
+            font-size: 1.5em; /* Zväčšený text stavu */
+            margin: 15px; 
+            font-weight: bold; 
+            color: #00d2d3;
+        }
+        button { 
+            padding: 12px 25px; 
+            font-size: 1.2em; /* Zväčšené tlačidlo */
+            cursor: pointer; 
+            background: #28a745; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            margin-top: 10px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover { 
+            background: #218838; 
+        }
     </style>
 </head>
 <body>
 
     <h1>Online Šach</h1>
-    <div id="status">Pripájanie...</div>
+    <div id="status">Pripájanie k serveru...</div>
     <div id="board"></div>
     <button onclick="copyInviteLink()">Vytvoriť pozvánku pre kamaráta</button>
 
+    <!-- Knižnice: JQuery, Chessboard.js, Chess.js, Socket.io -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js" integrity="sha256-eT3K0T9J2C4G8H1H/w24A5f2E1I3J4Y0J7N6V34=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
 
@@ -46,7 +83,7 @@
             } else if (myColor === 'b') {
                 document.getElementById('status').innerText = 'Si ČIERNY. Hra začína!';
             } else {
-                document.getElementById('status').innerText = 'Miestnosť je plná (Divák)';
+                document.getElementById('status').innerText = 'Miestnosť je plná (Si iba divák)';
             }
             initBoard();
         });
@@ -58,23 +95,22 @@
         });
 
         function onDragStart(source, piece) {
-            // Zakážeme ťahať ak je koniec hry, ak nie si na ťahu, alebo ak ťaháš súperovu figúrku
             if (game.game_over()) return false;
-            if ((game.turn() === 'w' && myColor !== 'w') || (game.turn() === 'b' && myColor !== 'b')) return false;
-            if ((game.turn() === 'w' && piece.search(/^b/) !== -1) || (game.turn() === 'b' && piece.search(/^w/) !== -1)) return false;
+            if ((game.turn() === 'w' && (myColor !== 'w' || piece.search(/^b/) !== -1)) ||
+                (game.turn() === 'b' && (myColor !== 'b' || piece.search(/^w/) !== -1))) {
+                return false;
+            }
         }
 
         function onDrop(source, target) {
-            // Skontrolujeme, či je ťah podľa pravidiel šachu možný
             const move = game.move({
                 from: source,
                 to: target,
                 promotion: 'q'
             });
 
-            if (move === null) return 'snapback'; // Neplatný ťah - figúrka sa vráti
+            if (move === null) return 'snapback';
 
-            // Posleme ťah na server druhemu hráčovi
             socket.emit('move', { source, target });
             updateStatus();
         }
@@ -96,24 +132,36 @@
                 orientation: myColor === 'b' ? 'black' : 'white',
                 onDragStart: onDragStart,
                 onDrop: onDrop,
-                onSnapEnd: onSnapEnd
+                onSnapEnd: onSnapEnd,
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
             };
             board = Chessboard('board', config);
         }
 
         function updateStatus() {
+            let status = '';
+            const turnText = game.turn() === 'w' ? 'Biely' : 'Čierny';
+
             if (game.in_checkmate()) {
-                document.getElementById('status').innerText = 'Koniec hry - Šach mat!';
+                status = `Koniec hry - Šach mat! Vyhral ${game.turn() === 'b' ? 'Biely' : 'Čierny'}.`;
             } else if (game.in_draw()) {
-                document.getElementById('status').innerText = 'Koniec hry - Remíza!';
+                status = 'Koniec hry - Remíza!';
             } else {
-                const turnText = game.turn() === 'w' ? 'Biely' : 'Čierny';
-                document.getElementById('status').innerText = `Na ťahu je: ${turnText}`;
+                status = `Na ťahu je: ${turnText}`;
+                if (game.in_check()) {
+                    status += ' (ŠACH!)';
+                }
             }
+            document.getElementById('status').innerText = status;
         }
 
         function copyInviteLink() {
-            navigator.clipboard.writeText(window.location.href);
+            const el = document.createElement('textarea');
+            el.value = window.location.href;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
             alert('Odkaz na hru bol skopírovaný! Pošli ho kamarátovi.');
         }
     </script>
